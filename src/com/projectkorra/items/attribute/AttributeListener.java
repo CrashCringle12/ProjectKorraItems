@@ -2,7 +2,6 @@ package com.projectkorra.items.attribute;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -11,7 +10,6 @@ import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.ItemStack;
 
 import com.projectkorra.items.items.Glider;
 import com.projectkorra.items.utils.AttributeUtils;
@@ -42,7 +40,7 @@ public class AttributeListener implements Listener {
 		// Handles the Charges, and ShiftCharges attribute
 		if (!player.isSneaking()) {
 			ItemUtils.updateOnActionEffects(player, Action.SHIFT);
-			ItemUtils.handleItemSource(player, "WaterSource", new ItemStack(Material.POTION));
+			ItemUtils.handleItemSource(player, "WaterSource", ItemUtils.getWaterBottles(1));
 		}
 	}
 
@@ -58,7 +56,7 @@ public class AttributeListener implements Listener {
 			return;
 		Player player = event.getPlayer();
 		ItemUtils.updateOnActionEffects(player, Action.LEFT_CLICK);
-		ItemUtils.handleItemSource(player, "WaterSource", new ItemStack(Material.POTION));
+		ItemUtils.handleItemSource(player, "WaterSource", ItemUtils.getWaterBottles(1));
 
 		// new GrapplingHook(player, Action.LEFTCLICK);
 	}

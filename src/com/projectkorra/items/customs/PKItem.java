@@ -11,6 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.potion.PotionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ public class PKItem {
 	private ArrayList<String> lore;
 	private Material material;
 	private int quantity;
-	private short damage;
+	// private short damage;
 	private ArrayList<RecipeIngredient> recipe;
 	private boolean unshapedRecipe;
 	private boolean valid;
@@ -40,7 +41,7 @@ public class PKItem {
 		lore = new ArrayList<String>();
 		material = null;
 		quantity = 1;
-		damage = (short) 0;
+		// damage = (short) 0;
 		recipe = new ArrayList<RecipeIngredient>();
 		valid = true;
 		unshapedRecipe = true;
@@ -104,6 +105,7 @@ public class PKItem {
 		}
 	}
 
+	/*
 	public void updateDamage(String s) {
 		try {
 			damage = (short) Integer.parseInt(s);
@@ -113,6 +115,7 @@ public class PKItem {
 			ProjectKorraItems.log.info(Messages.BAD_DAMAGE + ": " + toString());
 		}
 	}
+	*/
 
 	public void updateGlow(String s) {
 		try {
@@ -133,7 +136,6 @@ public class PKItem {
 	 * @param s
 	 * @param customItemNames
 	 */
-	@SuppressWarnings("deprecation")
 	public void updateRecipe(String s, Set<String> customItemNames) {
 		try {
 			s = s.replaceAll(" ", "");
@@ -143,27 +145,28 @@ public class PKItem {
 				String[] colons = comma.split(":");
 				Material mat = Material.getMaterial(colons[0]);
 
-				// Try to get the Material by id
+				// Try to get the Material by id, not anymore
+				/*
 				if (mat == null) {
 					try {
 						mat = Material.getMaterial(Integer.parseInt(colons[0]));
 					}
 					catch (NumberFormatException e) {
 					}
-				}
+				} */
 
 				int quantity = 1;
-				short damage = 0;
+				PotionType potionType = null;
 				if (colons.length > 1)
 					quantity = Integer.parseInt(colons[1]);
 				if (colons.length > 2)
-					damage = (short) Integer.parseInt(colons[2]);
+					potionType = PotionType.valueOf(colons[2]);
 
 				// The material is either invalid or it is a custom item name
 				if (mat != null) {
-					recipe.add(new RecipeIngredient(mat, quantity, damage));
+					recipe.add(new RecipeIngredient(mat, quantity, potionType));
 				} else if (customItemNames.contains(colons[0])) {
-					recipe.add(new RecipeIngredient(colons[0], quantity, damage));
+					recipe.add(new RecipeIngredient(colons[0], quantity, potionType));
 				} else {
 					ProjectKorraItems.log.info(Messages.BAD_RECIPE_MAT + ": " + colons[0]);
 					valid = false;
@@ -201,7 +204,7 @@ public class PKItem {
 	}
 
 	public ItemStack generateItem() {
-		ItemStack istack = new ItemStack(material, quantity, damage);
+		ItemStack istack = new ItemStack(material, quantity);
 		ItemMeta meta = istack.getItemMeta();
 		List<String> tempLore = new ArrayList<String>(lore);
 		meta.setDisplayName(displayName);
@@ -315,9 +318,11 @@ public class PKItem {
 		this.attributes = attributes;
 	}
 
+	/*
 	public void setDamage(short damage) {
 		this.damage = damage;
 	}
+	*/
 
 	public void setMaterial(Material material) {
 		this.material = material;
@@ -331,6 +336,7 @@ public class PKItem {
 		this.quantity = quantity;
 	}
 
+	/*
 	public short getDamage() {
 		return damage;
 	}
@@ -338,6 +344,7 @@ public class PKItem {
 	public void setData(short damage) {
 		this.damage = damage;
 	}
+	*/
 
 	public ArrayList<RecipeIngredient> getRecipe() {
 		return recipe;
@@ -365,7 +372,8 @@ public class PKItem {
 
 	@Override
 	public String toString() {
-		return "CustomItem [name=" + name + ", displayName=" + displayName + ", lore=" + lore + ", material=" + material + ", quantity=" + quantity + ", damage=" + damage;
+		// return "CustomItem [name=" + name + ", displayName=" + displayName + ", lore=" + lore + ", material=" + material + ", quantity=" + quantity + ", damage=" + damage;
+		return "CustomItem [name=" + name + ", displayName=" + displayName + ", lore=" + lore + ", material=" + material + ", quantity=" + quantity;
 	}
 
 	public static String colorizeString(String s) {

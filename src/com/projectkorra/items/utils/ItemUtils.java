@@ -5,13 +5,17 @@ import com.projectkorra.items.attribute.Action;
 import com.projectkorra.items.attribute.Attribute;
 import com.projectkorra.items.attribute.AttributeList;
 import com.projectkorra.items.customs.PKItem;
+import com.projectkorra.projectkorra.waterbending.util.WaterReturn;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
@@ -32,12 +36,11 @@ public class ItemUtils {
 	 * @param player the player with the items
 	 * @return a list of items
 	 */
-	@SuppressWarnings("deprecation")
 	public static ArrayList<ItemStack> getPlayerEquipment(Player player) {
 		ArrayList<ItemStack> istacks = new ArrayList<ItemStack>();
 		for (ItemStack istack : player.getInventory().getArmorContents())
 			istacks.add(istack);
-		istacks.add(player.getItemInHand());
+		istacks.add(player.getInventory().getItemInMainHand());
 		return istacks;
 	}
 
@@ -50,7 +53,6 @@ public class ItemUtils {
 	 * @param player the player that has equipment
 	 * @return a list of the equipment
 	 */
-	@SuppressWarnings("deprecation")
 	public static ArrayList<ItemStack> getPlayerValidEquipment(Player player) {
 		if (player == null) {
 			return new ArrayList<ItemStack>();
@@ -81,9 +83,9 @@ public class ItemUtils {
 			boolean keepItem = true;
 			if (!hasValidCharges(istack)) {
 				keepItem = false;
-			} else if (citem.getBooleanAttributeValue("HoldOnly") && !istack.equals(player.getItemInHand())) {
+			} else if (citem.getBooleanAttributeValue("HoldOnly") && !istack.equals(player.getInventory().getItemInMainHand())) {
 				keepItem = false;
-			} else if (citem.getBooleanAttributeValue("WearOnly") && istack.equals(player.getItemInHand())) {
+			} else if (citem.getBooleanAttributeValue("WearOnly") && istack.equals(player.getInventory().getItemInMainHand())) {
 				keepItem = false;
 			} else if (!AttributeUtils.hasRequiredElement(player, citem)) {
 				keepItem = false;
@@ -202,6 +204,27 @@ public class ItemUtils {
 	}
 	
 	/**
+	 * Returns the first slot index in a PlayerInventory, trying to avoid hotbar slots
+	 * 
+	 * @param Inventory the inventory to check
+	 * @return The slot found, -1 if inventory full
+	 */
+	public static int firstAvoidHotbar(final PlayerInventory inventory) {
+		int slot = -1;
+		for (int i = 9; i < inventory.getSize(); i++) {
+			if (inventory.getItem(i) == null || inventory.getItem(i).getType() == Material.AIR) {
+				slot = i;
+				break;
+			}
+		}
+		
+		if (slot < 0)
+			slot = inventory.firstEmpty();
+		
+		return slot;
+	}
+	
+	/**
 	 * Handles the specific stat "WaterSource" and in the future "MetalSource". These stats cause
 	 * specific temporary items to spawn inside of the players inventory.
 	 * 
@@ -213,27 +236,36 @@ public class ItemUtils {
 		ConcurrentHashMap<String, Double> attribs = AttributeUtils.getSimplePlayerAttributeMap(player);
 		if (attribs.containsKey(attrib) && attribs.get(attrib) == 1) {
 			final PlayerInventory inv = player.getInventory();
-			int slot = -1;
-			for (int i = 9; i < inv.getSize(); i++) {
-				if (inv.getItem(i) == null || inv.getItem(i).getType() == Material.AIR) {
-					slot = i;
-					break;
-				}
-			}
-			if (slot < 0)
-				slot = inv.first(Material.AIR);
-			if (slot >= 0) {
-				inv.setItem(slot, istack);
-				player.updateInventory();
-			} else
-				return;
+			final int fslot = firstAvoidHotbar(inv);
+			
+			if (fslot >= 0 && (!attrib.equalsIgnoreCase("WaterSource") || !WaterReturn.hasWaterBottle(player))) {
+				inv.setItem(fslot, istack);
 
-			final int fslot = slot;
-			new BukkitRunnable() {
-				public void run() {
-					inv.setItem(fslot, new ItemStack(Material.AIR));
-				}
-			}.runTaskLater(ProjectKorraItems.plugin, 10);
+				new BukkitRunnable() {
+					public void run() {
+						inv.setItem(fslot, new ItemStack(Material.AIR));
+					}
+				}.runTaskLater(ProjectKorraItems.plugin, 10);
+			}
 		}
+	}
+	
+	/**
+	 * Returns an ItemStack with the specified number of bottles of water
+	 * 
+	 * @param qty The quantity of water bottles in the ItemStack
+	 */
+	public static ItemStack getWaterBottles(int qty) {
+		ItemStack bottles = null;
+		
+		if (qty > 0 && qty <= 64) {
+			bottles = new ItemStack(Material.POTION, qty);
+			PotionMeta meta = (PotionMeta) bottles.getItemMeta();
+			PotionData data = new PotionData(PotionType.WATER);
+			meta.setBasePotionData(data);
+			bottles.setItemMeta(meta);
+		}
+		
+		return bottles;
 	}
 }
